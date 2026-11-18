@@ -1,0 +1,8 @@
+
+{
+    "files.associations": {
+        "*.h": "c"
+    },
+    "editor.formatOnSave": true,
+    "C_Cpp.default.cStandard": "c17"
+}
