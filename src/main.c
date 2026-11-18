@@ -5,14 +5,47 @@
 ma_engine maEngine;
 ma_sound maSound;
 
-void playSong()
+struct Playlist
+{
+    int id;
+    char songPath[256];
+    int songsSequence[256];
+};
+
+struct Song
+{
+    int id;
+    char songPath[256];
+};
+
+void playSong(char songPath[])
 {
     if (&maSound != NULL)
     {
         ma_sound_uninit(&maSound);
     }
-    ma_sound_init_from_file(&maEngine, "assets/test440.mp3", 0, NULL, NULL, &maSound);
+    ma_sound_init_from_file(&maEngine, songPath, 0, NULL, NULL, &maSound);
     ma_sound_start(&maSound);
+}
+
+void playPlaylist(struct Playlist playlist)
+{
+    // TODO! THIS IS A PLACEHOLDER
+    for (int i = 0; i < sizeof(playlist.songsSequence) / sizeof(playlist.songsSequence[0]); i++)
+    {
+        int songId = playlist.songsSequence[i];
+        if (songId == -1)
+        {
+            break; // End of playlist
+        }
+        char songPath[256];
+        sprintf(songPath, "assets/song%d.mp3", songId);
+        playSong(songPath);
+        while (ma_sound_is_playing(&maSound))
+        {
+            ma_sleep(100); // Wait for the song to finish
+        }
+    }
 }
 
 int main()
@@ -29,7 +62,7 @@ int main()
         c = getchar();
         if (c == 'p')
         {
-            playSong();
+            playSong("assets/test440.mp3");
         }
     }
     ma_engine_uninit(&maEngine);
