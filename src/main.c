@@ -4,6 +4,7 @@
 
 ma_engine maEngine;
 ma_sound maSound;
+int globalVolume = 100;
 
 struct Playlist
 {
@@ -48,13 +49,23 @@ void playPlaylist(struct Playlist playlist)
     }
 }
 
+bool setVolume(int volume)
+{
+    if (volume < 0 || volume > 100)
+    {
+        return false; // Invalid volume range
+    }
+    globalVolume = volume;
+    ma_engine_set_volume(&maEngine, volume / 100.0f);
+    return true;
+}
+
 int main()
 {
 
     ma_engine_init(NULL, &maEngine);
-
+    setVolume(90);
     // while (ma_sound_is_playing(&maSound)) ma_sleep(100);
-    // change
     char c = 0;
     while (c != 'q')
     {
