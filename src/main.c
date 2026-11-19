@@ -27,6 +27,13 @@ struct TimeSlot
     struct Playlist playlist;
 };
 
+void checkTimeSlotOverlap()
+{
+    // This function is a placeholder for checking time slot overlaps.
+    // Implement the logic to check for overlapping time slots based on the start and end ranges, time of day, and days of the week.
+    // AI Comment!!!
+}
+
 ma_engine maEngine;
 ma_sound maSound;
 int globalVolume = 100;
@@ -118,12 +125,14 @@ bool setVolume(int volume)
     return true;
 }
 
-int main()
+void testLoopWithKeys()
 {
-    ma_engine_init(NULL, &maEngine);
-    setVolume(90);
+    // DEFINE TEST SONGS
     struct Song testSong = {1, "assets/test440.mp3", 0.0f, 0.0f};
+    struct Song testSong2 = {2, "assets/test1000.mp3", 0.0f, 0.0f};
     testSong.durationSeconds = getSongDuration(testSong);
+    testSong2.durationSeconds = getSongDuration(testSong2);
+
     char c = 0;
     while (c != 'q')
     {
@@ -146,6 +155,15 @@ int main()
             }
         }
     }
+}
+
+int main()
+{
+    ma_engine_init(NULL, &maEngine);
+    setVolume(90);
+
+    testLoopWithKeys();
+
     ma_engine_uninit(&maEngine);
     return 0;
 }
