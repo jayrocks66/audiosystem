@@ -3,18 +3,18 @@
 #include <stdbool.h>
 #include <miniaudio.h>
 
-struct Playlist
-{
-    int id;
-    int songsSequence[256];
-};
-
 struct Song
 {
     int id;
     char songPath[256];
     float durationSeconds;
     float playbackCursorSeconds;
+};
+
+struct Playlist
+{
+    int id;
+    struct Song songsSequence[256]; // Array of song structs
 };
 
 struct TimeSlot
@@ -133,6 +133,8 @@ void testLoopWithKeys()
     testSong.durationSeconds = getSongDuration(testSong);
     testSong2.durationSeconds = getSongDuration(testSong2);
 
+    struct Playlist testPlaylist = {1, {testSong, testSong2}};
+
     char c = 0;
     while (c != 'q')
     {
@@ -152,6 +154,24 @@ void testLoopWithKeys()
                     ma_sleep(100);
                 }
                 printf("\nDone!\n");
+            }
+        }
+        if (c == 'l')
+        {
+            printf("Playing playlist ID: %d\n", testPlaylist.id);
+            for (int i = 0; i < sizeof(testPlaylist.songsSequence) / sizeof(testPlaylist.songsSequence[0]); i++)
+            {
+                if (checkSongExists(testPlaylist.songsSequence[i]))
+                {
+                    printf("Playing song: %s - length: %.2f seconds\n", testPlaylist.songsSequence[i].songPath, testPlaylist.songsSequence[i].durationSeconds);
+                    playSong(testPlaylist.songsSequence[i]);
+                    while (ma_sound_is_playing(&maSound))
+                    {
+                        printf("\rPlayback cursor: %.2f seconds", getPlaybackCursor());
+                        ma_sleep(100);
+                    }
+                    printf("\nDone!\n");
+                }
             }
         }
     }
