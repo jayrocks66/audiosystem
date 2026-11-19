@@ -133,7 +133,6 @@ int main()
     setVolume(90);
     struct Song testSong = {1, "assets/test440.mp3", 0.0f, 0.0f};
     testSong.durationSeconds = getSongDuration(testSong);
-    // while (ma_sound_is_playing(&maSound)) ma_sleep(100);
     char c = 0;
     while (c != 'q')
     {
