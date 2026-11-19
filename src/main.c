@@ -19,8 +19,11 @@ struct Song
 
 struct TimeSlot
 {
-    time_t startTime;
-    time_t endTime;
+    time_t startRange;
+    time_t endRange;
+    int startTimeOfDay; // Minutes since midnight
+    int endTimeOfDay;   // Minutes since midnight
+    int daysOfWeek[7];  // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     struct Playlist playlist;
 };
 
