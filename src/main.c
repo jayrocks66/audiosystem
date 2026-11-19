@@ -14,12 +14,14 @@ struct Song
 {
     int id;
     char songPath[256];
+    float durationSeconds;
+    float playbackCursorSeconds;
 };
 
 ma_engine maEngine;
 ma_sound maSound;
 int globalVolume = 100;
-struct Song songBeingPlayed = {0, ""};
+struct Song songBeingPlayed = {0, "", 0.0f, 0.0f};
 
 bool checkSongExists(struct Song song)
 {
@@ -66,6 +68,33 @@ float getPlaybackCursor()
     return -1.0f; // No song is being played
 }
 
+float getSongDuration(struct Song song)
+{
+    ma_decoder decoder;
+
+    // 1. Open the file from the path
+    if (ma_decoder_init_file(song.songPath, NULL, &decoder) != MA_SUCCESS)
+    {
+        return -1.0f; // Error opening file
+    }
+
+    // 2. Get total PCM frames
+    ma_uint64 lengthInFrames = 0;
+    ma_result result = ma_decoder_get_length_in_pcm_frames(&decoder, &lengthInFrames);
+
+    // 3. Convert frames to seconds
+    float seconds = -1.0f;
+    if (result == MA_SUCCESS && decoder.outputSampleRate > 0)
+    {
+        seconds = (float)lengthInFrames / (float)decoder.outputSampleRate;
+    }
+
+    // 4. Clean up
+    ma_decoder_uninit(&decoder);
+
+    return seconds;
+}
+
 /*void playPlaylist(struct Playlist playlist)
 {
     // TODO! THIS IS A PLACEHOLDER
@@ -102,24 +131,29 @@ int main()
 {
     ma_engine_init(NULL, &maEngine);
     setVolume(90);
-    struct Song testSong = {1, "assets/test440.mp3"};
+    struct Song testSong = {1, "assets/test440.mp3", 0.0f, 0.0f};
+    testSong.durationSeconds = getSongDuration(testSong);
     // while (ma_sound_is_playing(&maSound)) ma_sleep(100);
     char c = 0;
-    printf("Press:\n'p' to play the test tone\n'q' to quit:\n't' to check the playback cursor (do it FAST!)\nfollowed by ENTER\n");
     while (c != 'q')
     {
+        printf("\nPress:\n'p' to play the test tone\n'q' to quit:\nfollowed by ENTER\n");
         c = getchar();
+        while (getchar() != '\n')
+            ; // EMPTY THE INPUT BUFFER
         if (c == 'p')
         {
             if (checkSongExists(testSong))
             {
+                printf("Playing song: %s - length: %.2f seconds\n", testSong.songPath, testSong.durationSeconds);
                 playSong(testSong);
-                printf("Playback cursor: %.2f seconds\n", getPlaybackCursor());
+                while (ma_sound_is_playing(&maSound))
+                {
+                    printf("\rPlayback cursor: %.2f seconds", getPlaybackCursor());
+                    ma_sleep(100);
+                }
+                printf("\nDone!\n");
             }
-        }
-        if (c == 't')
-        {
-            printf("Playback cursor: %.2f seconds\n", getPlaybackCursor());
         }
     }
     ma_engine_uninit(&maEngine);
