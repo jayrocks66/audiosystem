@@ -6,7 +6,6 @@
 struct Playlist
 {
     int id;
-    char songPath[256];
     int songsSequence[256];
 };
 
@@ -18,10 +17,18 @@ struct Song
     float playbackCursorSeconds;
 };
 
+struct TimeSlot
+{
+    time_t startTime;
+    time_t endTime;
+    struct Playlist playlist;
+};
+
 ma_engine maEngine;
 ma_sound maSound;
 int globalVolume = 100;
 struct Song songBeingPlayed = {0, "", 0.0f, 0.0f};
+struct Playlist playlistBeingPlayed = {0, {0}};
 
 bool checkSongExists(struct Song song)
 {
@@ -70,6 +77,8 @@ float getPlaybackCursor()
 
 float getSongDuration(struct Song song)
 {
+    // AI wrote this - let's check it further on.
+
     ma_decoder decoder;
 
     // 1. Open the file from the path
@@ -94,27 +103,6 @@ float getSongDuration(struct Song song)
 
     return seconds;
 }
-
-/*void playPlaylist(struct Playlist playlist)
-{
-    // TODO! THIS IS A PLACEHOLDER
-    for (int i = 0; i < sizeof(playlist.songsSequence) / sizeof(playlist.songsSequence[0]); i++)
-    {
-        int songId = playlist.songsSequence[i];
-        if (songId == -1)
-        {
-            break; // End of playlist
-        }
-        char songPath[256];
-        sprintf(songPath, "assets/song%d.mp3", songId);
-        struct Song song = {songId, songPath};
-        playSong(song);
-        while (ma_sound_is_playing(&maSound))
-        {
-            ma_sleep(100); // Wait for the song to finish
-        }
-    }
-}*/
 
 bool setVolume(int volume)
 {
