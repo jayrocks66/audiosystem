@@ -1,10 +1,7 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include <stdio.h>
+#include <stdbool.h>
 #include <miniaudio.h>
-
-ma_engine maEngine;
-ma_sound maSound;
-int globalVolume = 100;
 
 struct Playlist
 {
@@ -19,6 +16,11 @@ struct Song
     char songPath[256];
 };
 
+ma_engine maEngine;
+ma_sound maSound;
+int globalVolume = 100;
+struct Song songBeingPlayed = {0, ""};
+
 bool checkSongExists(struct Song song)
 {
     FILE *file = fopen(song.songPath, "r");
@@ -30,12 +32,18 @@ bool checkSongExists(struct Song song)
     return false;
 }
 
-bool playSong(struct Song song)
+void stopPlayback()
 {
     if (&maSound != NULL)
     {
         ma_sound_uninit(&maSound);
     }
+    songBeingPlayed = (struct Song){0, ""};
+}
+
+bool playSong(struct Song song)
+{
+    stopPlayback();
     ma_result isPlayable = ma_sound_init_from_file(&maEngine, song.songPath, 0, NULL, NULL, &maSound);
     if (isPlayable != MA_SUCCESS)
     {
@@ -43,7 +51,19 @@ bool playSong(struct Song song)
         return false;
     }
     ma_sound_start(&maSound);
+    songBeingPlayed = song;
     return true;
+}
+
+float getPlaybackCursor()
+{
+    if (songBeingPlayed.id != 0 && ma_sound_is_playing(&maSound))
+    {
+        float cursorSeconds;
+        ma_sound_get_cursor_in_seconds(&maSound, &cursorSeconds);
+        return cursorSeconds;
+    }
+    return -1.0f; // No song is being played
 }
 
 /*void playPlaylist(struct Playlist playlist)
@@ -85,16 +105,21 @@ int main()
     struct Song testSong = {1, "assets/test440.mp3"};
     // while (ma_sound_is_playing(&maSound)) ma_sleep(100);
     char c = 0;
+    printf("Press:\n'p' to play the test tone\n'q' to quit:\n't' to check the playback cursor (do it FAST!)\nfollowed by ENTER\n");
     while (c != 'q')
     {
-        printf("Press 'p' to play the song or 'q' to quit: ");
         c = getchar();
         if (c == 'p')
         {
             if (checkSongExists(testSong))
             {
                 playSong(testSong);
+                printf("Playback cursor: %.2f seconds\n", getPlaybackCursor());
             }
+        }
+        if (c == 't')
+        {
+            printf("Playback cursor: %.2f seconds\n", getPlaybackCursor());
         }
     }
     ma_engine_uninit(&maEngine);
