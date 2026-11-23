@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <miniaudio.h>
+#include <time.h>
 
 struct Song
 {
@@ -23,9 +24,76 @@ struct TimeSlot
     time_t endRange;
     int startTimeOfDay; // Minutes since midnight
     int endTimeOfDay;   // Minutes since midnight
-    int daysOfWeek[7];  // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    bool daysOfWeek[7]; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     struct Playlist playlist;
 };
+
+bool isLeapYear(int year)
+{
+    if (year % 400 == 0 || (year % 4 == 0 && year % 100 != 0))
+        return true;
+    return false;
+}
+
+int getDaysInMonth(int year, int month)
+{
+    if (month < 1 || month > 12)
+        return -1;
+    if (year < 1900 || year > 3000)
+        return -1;
+
+    switch (month)
+    {
+    case 2:
+        if (isLeapYear(year))
+            return 29;
+        return 28;
+    case 4:
+    case 6:
+    case 9:
+    case 11:
+        return 30;
+    default:
+        return 31;
+    }
+}
+
+time_t getTimestampByDateTime(int year, int month, int day, int hour, int minute)
+{
+    if (year < 1900 || year > 3000 ||
+        month < 1 || month > 12 ||
+        day < 1 || day > 31 ||
+        hour < 0 || hour > 23 ||
+        minute < 0 || minute > 59)
+    {
+        return -1;
+    }
+
+    if (day > getDaysInMonth(year, month))
+    {
+        return -1;
+    }
+
+    struct tm dateTime = {
+        .tm_year = year - 1900,
+        .tm_mon = month - 1,
+        .tm_mday = day,
+        .tm_hour = hour,
+        .tm_min = minute,
+        .tm_sec = 0,
+        .tm_isdst = -1};
+
+    return mktime(&dateTime);
+}
+
+int getTimeOfDayInMinutes(int hour, int minute)
+{
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59)
+    {
+        return -1; // Invalid time
+    }
+    return hour * 60 + minute;
+}
 
 void checkTimeSlotOverlap()
 {
@@ -135,10 +203,18 @@ void testLoopWithKeys()
 
     struct Playlist testPlaylist = {1, {testSong, testSong2}};
 
+    struct TimeSlot testTimeSlot = {
+        .startRange = 0,
+        .endRange = 0,
+        .startTimeOfDay = getTimeOfDayInMinutes(11, 0),
+        .endTimeOfDay = getTimeOfDayInMinutes(12, 0),
+        .daysOfWeek = {true, true, true, true, true, true, true},
+        .playlist = testPlaylist};
+
     char c = 0;
     while (c != 'q')
     {
-        printf("\nPress:\n'p' to play the test tone\n'q' to quit:\nfollowed by ENTER\n");
+        printf("\nPress:\n'p' to play the test tone\n'l''to play the test playlist\n'q' to quit\nfollowed by ENTER\n");
         c = getchar();
         while (getchar() != '\n')
             ; // EMPTY THE INPUT BUFFER
@@ -173,6 +249,10 @@ void testLoopWithKeys()
                     printf("\nDone!\n");
                 }
             }
+        }
+        if (c == 't')
+        {
+            printf("Playing test time slot");
         }
     }
 }
